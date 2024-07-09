@@ -15,8 +15,7 @@ class FileSystemEventService(FileSystemEventHandler):
         try:
             self.file_service.move_file(event.src_path)
         except Exception as e:
-            print(f'error occurred: {e}')
-
+            print(f'Error occurred while moving file {event.src_path} to {self.file_service.destination_path}: {e}')
 
 
 class HandlerService:
