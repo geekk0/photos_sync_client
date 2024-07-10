@@ -10,7 +10,6 @@ config.read('config.ini')
 class FileTransferService:
 
     def __init__(self, ):
-        # self.source_path = config['PATH_SETTINGS']['SOURCE_PATH']
         self.destination_path = config['PATH_SETTINGS']['DESTINATION_PATH']
 
     def move_file(self, file):

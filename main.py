@@ -1,5 +1,5 @@
+import asyncio
 import os
-import time
 import configparser
 
 from handler_service import HandlerService
@@ -9,12 +9,13 @@ config.read('config.ini')
 
 
 class SyncManager:
-    def __init__(self, current_config: configparser.ConfigParser):
+    def __init__(self, current_config: configparser.ConfigParser, note_field):
         self.config = current_config
         self.source_path = None
         self.destination_path = None
         self.error = None
-        self.handler_service = HandlerService()
+        self.note_field = note_field
+        self.handler_service = HandlerService(note_field)
 
     def init_paths(self):
         paths = dict(config.items('PATH_SETTINGS'))
@@ -25,22 +26,10 @@ class SyncManager:
             else:
                 setattr(self, key, path)
 
-    def track_created_files(self):
-        self.handler_service.monitor_folder(self.source_path)
+    async def track_created_files(self):
+        await self.handler_service.monitor_folder(self.source_path, self.note_field)
+        # await asyncio.sleep(10)
 
-
-def run_sync_manager():
-    sync_manager = SyncManager(config)
-    sync_manager.init_paths()
-    if not sync_manager.error:
-        sync_manager.track_created_files()
-
-
-if __name__ == '__main__':
-    sync_manager = SyncManager(config)
-    sync_manager.init_paths()
-    if not sync_manager.error:
-        sync_manager.track_created_files()
 
 
 
