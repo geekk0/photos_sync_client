@@ -1,23 +1,23 @@
-import asyncio
 import os
 import configparser
 
 from handler_service import HandlerService
 
 config = configparser.ConfigParser()
-config.read('config.ini')
-
+with open('config.ini', 'r', encoding='utf-8') as f:
+    config.read_file(f)
 
 class SyncManager:
-    def __init__(self, current_config: configparser.ConfigParser, note_field):
+    def __init__(self, current_config: configparser.ConfigParser):
         self.config = current_config
         self.source_path = None
         self.destination_path = None
         self.error = None
-        self.note_field = note_field
-        self.handler_service = HandlerService(note_field)
+        self.note_field = None
+        self.studio_name = None
+        self.handler_service = HandlerService()
 
-    def init_paths(self):
+    def init_settings(self):
         paths = dict(config.items('PATH_SETTINGS'))
         for key, path in paths.items():
             if not os.path.isdir(path):
@@ -25,10 +25,25 @@ class SyncManager:
                 self.error = True
             else:
                 setattr(self, key, path)
+        studio_settings = dict(config.items('STUDIO_SETTINGS'))
+        for key, value in studio_settings.items():
+            setattr(self, key, value)
 
-    async def track_created_files(self):
-        await self.handler_service.monitor_folder(self.source_path, self.note_field)
-        # await asyncio.sleep(10)
+    def save_settings(self, **settings: str):
+
+        for k,v in settings.items():
+            if 'path' in k:
+                config.set('PATH_SETTINGS', k, v)
+            else:
+                config.set('STUDIO_SETTINGS', k, v)
+            # with open('config.ini', 'w') as configfile:
+            #     config.write(configfile)
+            with open('config.ini', 'w', encoding='utf-8') as configfile:
+                config.write(configfile)
+
+    async def track_created_files(self, note_field):
+        await self.handler_service.monitor_folder(self.source_path, note_field)
+
 
 
 
