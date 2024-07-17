@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import sys
 import asyncio
 import configparser
 import qasync
 
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow
-
 
 from main import SyncManager
 from test_design import Ui_MainWindow

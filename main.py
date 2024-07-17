@@ -36,13 +36,12 @@ class SyncManager:
                 config.set('PATH_SETTINGS', k, v)
             else:
                 config.set('STUDIO_SETTINGS', k, v)
-            # with open('config.ini', 'w') as configfile:
-            #     config.write(configfile)
             with open('config.ini', 'w', encoding='utf-8') as configfile:
                 config.write(configfile)
 
     async def track_created_files(self, note_field):
         await self.handler_service.monitor_folder(self.source_path, note_field)
+
 
 
 
