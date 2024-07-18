@@ -82,7 +82,8 @@ class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
         try:
             self.sync_manager.save_settings(source_path=self.ui.source_folder_path.text(),
                                             destination_path=self.ui.destination_folder_path.text(),
-                                            studio_name=self.ui.studio_name_input.toPlainText())
+                                            studio_name=self.ui.studio_name_input.toPlainText(),
+                                            rename_check_time=str(self.sync_manager.rename_check_time))
             self.init_paths()
             self.ui.tabWidget.setCurrentIndex(0)
             self.restart_monitoring()

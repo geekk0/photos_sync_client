@@ -12,11 +12,13 @@ class FileTransferService:
         config = configparser.ConfigParser()
         config.read('config.ini')
         self.destination_path = config['PATH_SETTINGS']['DESTINATION_PATH']
+        self.rename_check_time = float(config['STUDIO_SETTINGS']['rename_check_time'])
         self.logger = None
         self.init_logger()
 
     def move_file(self, file):
         try:
+            self.check_file_name(file)
             if self.check_file_complete(file):
                 try:
                     shutil.move(file, self.destination_path)
@@ -58,6 +60,10 @@ class FileTransferService:
 
         else:
             return False
+
+    def check_file_name(self, file):
+        if '~' in file:
+            time.sleep(self.rename_check_time)
 
     def init_logger(self):
         log_file_name = 'sync_client.log'

@@ -12,6 +12,7 @@ class SyncManager:
         self.config = current_config
         self.source_path = None
         self.destination_path = None
+        self.rename_check_time = None
         self.error = None
         self.note_field = None
         self.studio_name = None
