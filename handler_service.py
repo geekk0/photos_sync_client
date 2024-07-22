@@ -34,21 +34,10 @@ class FileSystemEventService(FileSystemEventHandler, QObject):
                 self.move_file(self.file_service.previous_file)
 
             self.file_service.previous_file = event.dest_path
-            thread = threading.Thread(target=self.run_timer_move, args=(event.dest_path,))
-            thread.start()
-
-    def run_timer_move(self, file_path):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        task = loop.create_task(self.timer_move(file_path))
-        loop.run_until_complete(task)
-
-    async def timer_move(self, file_path):
-        print(f'timer for {file_path} started at: {datetime.datetime.now()}')
-        await asyncio.sleep(60*2)
-        print(f'timer for {file_path} expired at: {datetime.datetime.now()}')
-        if os.path.exists(file_path):
-            self.move_file(file_path)
+            timer = threading.Timer(60*2, self.move_file, [event.dest_path])
+            self.pending_move_tasks[event.dest_path] = timer
+            print(f'timer for {event.dest_path} started at: {datetime.datetime.now()}')
+            timer.start()
 
     def rewrite_log_field(self, event_src_path, status: str):
         current_value = self.note_field.toPlainText()
@@ -67,25 +56,16 @@ class FileSystemEventService(FileSystemEventHandler, QObject):
         QMetaObject.invokeMethod(self.note_field, "setPlainText", Qt.QueuedConnection,
                                  Q_ARG(str, new_message))
 
-    async def timer_move(self, file_path):
-        print(f'timer for {file_path} started at: {datetime.datetime.now()}')
-        await asyncio.sleep(60*2)
-        print(f'timer for {file_path} expired at: {datetime.datetime.now()}')
+    def move_file(self, file_path):
         if os.path.exists(file_path):
             try:
                 move_result = self.file_service.move_file(file_path)
                 self.rewrite_log_field(file_path, move_result)
-            except FileNotFoundError as e:
-                print(f'File not found: {e}')
-
-    def move_file(self, file_path):
-        try:
-            move_result = self.file_service.move_file(file_path)
-            self.rewrite_log_field(file_path, move_result)
-        except FileExistsError as e:
-            print(f'File already exists: {e}')
-        except Exception as e:
-            print(f'Error occurred while moving file {file_path}: {e}')
+                print(f'{file_path} was copied at: {datetime.datetime.now()}')
+            except FileExistsError as e:
+                print(f'File already exists: {e}')
+            except Exception as e:
+                print(f'Error occurred while moving file {file_path}: {e}')
 
 
 class HandlerService:
