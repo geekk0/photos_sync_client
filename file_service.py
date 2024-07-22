@@ -12,38 +12,17 @@ class FileTransferService:
         config = configparser.ConfigParser()
         config.read('config.ini')
         self.destination_path = config['PATH_SETTINGS']['DESTINATION_PATH']
-        self.rename_check_time = float(config['STUDIO_SETTINGS']['rename_check_time'])
+        self.delay_value = int(config['STUDIO_SETTINGS']['delay_value'])
         self.logger = None
         self.init_logger()
 
     def move_file(self, file):
         try:
-            self.check_file_name(file)
-            if self.check_file_complete(file):
-                try:
-                    shutil.move(file, self.destination_path)
-                except Exception as e:
-                    logger.error(f'move file error {e}')
-            else:
-                logger.warning(f'file {file} is not complete')
+            shutil.move(file, self.destination_path)
+            return 'success'
         except Exception as e:
-            logger.error(e)
-
-    # @staticmethod
-    # async def check_file_complete(file):
-    #     print(f'executing check_file_complete for {file}')
-    #     try:
-    #         old_file_size = 0
-    #         while True:
-    #             current_file_size = os.path.getsize(file)
-    #             if current_file_size == old_file_size:  # If the file size hasn't changed, the file is complete
-    #                 print(f'file {file} is full')
-    #                 return True
-    #             else:  # If the file size has changed, wait and check again
-    #                 old_file_size = current_file_size
-    #                 await asyncio.sleep(0.7)
-    #     except Exception as e:
-    #         print(e)
+            logger.error(f'move file error {e}')
+            return 'error'
 
     def check_file_complete(self, file, counter=0):
 
@@ -61,9 +40,17 @@ class FileTransferService:
         else:
             return False
 
+    async def transfer_files(self, files_list: list):
+        for file in files_list:
+            try:
+                shutil.move(file, self.destination_path)
+                logger.info(f'file {file} moved')
+            except Exception as e:
+                logger.error(f'move file error {e}')
+
     def check_file_name(self, file):
         if '~' in file:
-            time.sleep(self.rename_check_time)
+            time.sleep(self.delay_value)
 
     def init_logger(self):
         log_file_name = 'sync_client.log'

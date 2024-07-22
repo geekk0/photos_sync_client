@@ -11,7 +11,7 @@ from main import SyncManager
 from test_design import Ui_MainWindow
 
 
-class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
+class MyApp(QMainWindow):
 
     singleton: 'MyApp' = None
 
@@ -20,6 +20,8 @@ class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
         self.init_paths()
 
         self.sync_task = None
+        self.sync_manager = None
+        self.text_widget = None
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -35,9 +37,9 @@ class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
         self.setWindowTitle('Перемещение файлов на сервер')
 
         self.text_widget = self.ui.LogView
-        font = self.text_widget.font()  # Get the current font
-        font.setPointSize(12)  # Set the font size to your preferred value
-        self.text_widget.setFont(font)  # Apply the font back to the widget
+        font = self.text_widget.font()
+        font.setPointSize(12)
+        self.text_widget.setFont(font)
 
         font = self.ui.source_folder_path.font()
         font.setPointSize(12)
@@ -54,6 +56,7 @@ class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
         self.ui.studio_name_input.setFont(font)
         self.ui.studio_name_input.setText(self.sync_manager.studio_name)
 
+        self.ui.delay_value_box.setValue(int(self.sync_manager.delay_value))
 
     def init_paths(self):
         config = configparser.ConfigParser()
@@ -83,7 +86,7 @@ class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
             self.sync_manager.save_settings(source_path=self.ui.source_folder_path.text(),
                                             destination_path=self.ui.destination_folder_path.text(),
                                             studio_name=self.ui.studio_name_input.toPlainText(),
-                                            rename_check_time=str(self.sync_manager.rename_check_time))
+                                            delay_value=str(self.ui.delay_value_box.value()))
             self.init_paths()
             self.ui.tabWidget.setCurrentIndex(0)
             self.restart_monitoring()
@@ -109,14 +112,6 @@ class MyApp(QMainWindow):  # make MyApp a subclass of QMainWindow
         self.ui.LogView.setText("")
 
 
-    # def restart(self):
-    #     self.close()  # Close the current window
-    #     MyApp.singleton = MyApp()  # Create a new instance of MyApp
-    #     MyApp.singleton.show()  # Show the new window
-    #     MyApp.singleton.restart_monitoring()  # Restart the Watchdog observer
-
-
-
 def main():
     app = QApplication(sys.argv)
     loop = qasync.QEventLoop(app)
@@ -124,10 +119,6 @@ def main():
 
     ex = MyApp()
     ex.show()
-
-    # with loop:
-    #     loop.call_soon(asyncio.create_task, ex.run_sync_manager(ex.text_widget))
-    #     sys.exit(loop.run_forever())
 
     with loop:
         # Schedule a callback that creates the task

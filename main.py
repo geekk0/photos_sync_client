@@ -7,15 +7,16 @@ config = configparser.ConfigParser()
 with open('config.ini', 'r', encoding='utf-8') as f:
     config.read_file(f)
 
+
 class SyncManager:
     def __init__(self, current_config: configparser.ConfigParser):
         self.config = current_config
         self.source_path = None
         self.destination_path = None
-        self.rename_check_time = None
         self.error = None
         self.note_field = None
         self.studio_name = None
+        self.delay_value = None
         self.handler_service = HandlerService()
 
     def init_settings(self):
@@ -30,9 +31,10 @@ class SyncManager:
         for key, value in studio_settings.items():
             setattr(self, key, value)
 
-    def save_settings(self, **settings: str):
+    @staticmethod
+    def save_settings(**settings: str):
 
-        for k,v in settings.items():
+        for k, v in settings.items():
             if 'path' in k:
                 config.set('PATH_SETTINGS', k, v)
             else:
@@ -42,11 +44,3 @@ class SyncManager:
 
     async def track_created_files(self, note_field):
         await self.handler_service.monitor_folder(self.source_path, note_field)
-
-
-
-
-
-
-
-
