@@ -20,7 +20,7 @@ def create_dummy_files(directory, qty):
         try:
             os.rename(initial_path, final_path)
             print(datetime.datetime.now())
-        except:
+        except FileExistsError:
             print(f'file {initial_path} was moved')
 
 
