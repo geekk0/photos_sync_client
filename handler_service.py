@@ -1,6 +1,7 @@
 import asyncio
 import glob
 import os
+import threading
 import time
 import datetime
 
@@ -17,6 +18,7 @@ class FileSystemEventService(FileSystemEventHandler, QObject):
         QObject.__init__(self)
         self.file_service = FileTransferService()
         self.note_field = None
+        self.pending_move_tasks = {}
 
     def assign_log_widget(self, note_widget):
         self.note_field = note_widget
@@ -25,13 +27,28 @@ class FileSystemEventService(FileSystemEventHandler, QObject):
         if event.dest_path.lower().endswith('jpg'):
             print(f"see file {event.dest_path} at {datetime.datetime.now()}")
 
-            try:
-                time.sleep(self.file_service.delay_value)
-                move_result = self.file_service.move_file(event.dest_path)
-                self.rewrite_log_field(event.dest_path, move_result)
-            except Exception as e:
-                print(f'Error occurred while moving file {event.dest_path} to '
-                      f'{self.file_service.destination_path}: {e}')
+            if self.file_service.previous_file:
+                if self.file_service.previous_file in self.pending_move_tasks:
+                    self.pending_move_tasks[self.file_service.previous_file].cancel()
+                    del self.pending_move_tasks[self.file_service.previous_file]
+                self.move_file(self.file_service.previous_file)
+
+            self.file_service.previous_file = event.dest_path
+            thread = threading.Thread(target=self.run_timer_move, args=(event.dest_path,))
+            thread.start()
+
+    def run_timer_move(self, file_path):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        task = loop.create_task(self.timer_move(file_path))
+        loop.run_until_complete(task)
+
+    async def timer_move(self, file_path):
+        print(f'timer for {file_path} started at: {datetime.datetime.now()}')
+        await asyncio.sleep(60*2)
+        print(f'timer for {file_path} expired at: {datetime.datetime.now()}')
+        if os.path.exists(file_path):
+            self.move_file(file_path)
 
     def rewrite_log_field(self, event_src_path, status: str):
         current_value = self.note_field.toPlainText()
@@ -49,6 +66,26 @@ class FileSystemEventService(FileSystemEventHandler, QObject):
 
         QMetaObject.invokeMethod(self.note_field, "setPlainText", Qt.QueuedConnection,
                                  Q_ARG(str, new_message))
+
+    async def timer_move(self, file_path):
+        print(f'timer for {file_path} started at: {datetime.datetime.now()}')
+        await asyncio.sleep(60*2)
+        print(f'timer for {file_path} expired at: {datetime.datetime.now()}')
+        if os.path.exists(file_path):
+            try:
+                move_result = self.file_service.move_file(file_path)
+                self.rewrite_log_field(file_path, move_result)
+            except FileNotFoundError as e:
+                print(f'File not found: {e}')
+
+    def move_file(self, file_path):
+        try:
+            move_result = self.file_service.move_file(file_path)
+            self.rewrite_log_field(file_path, move_result)
+        except FileExistsError as e:
+            print(f'File already exists: {e}')
+        except Exception as e:
+            print(f'Error occurred while moving file {file_path}: {e}')
 
 
 class HandlerService:

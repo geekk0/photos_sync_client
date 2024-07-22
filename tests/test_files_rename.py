@@ -26,6 +26,7 @@ def create_dummy_files(directory, qty):
 
 directory = input("Enter the directory path: ")
 num_files = int(input("Enter number of files: "))
+
 try:
     create_dummy_files(directory, num_files)
 except Exception as e:

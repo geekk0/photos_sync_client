@@ -16,20 +16,22 @@ class SyncManager:
         self.error = None
         self.note_field = None
         self.studio_name = None
-        self.delay_value = None
         self.handler_service = HandlerService()
 
     def init_settings(self):
-        paths = dict(config.items('PATH_SETTINGS'))
-        for key, path in paths.items():
-            if not os.path.isdir(path):
-                print(f'No such path: {path}')
-                self.error = True
-            else:
-                setattr(self, key, path)
-        studio_settings = dict(config.items('STUDIO_SETTINGS'))
-        for key, value in studio_settings.items():
-            setattr(self, key, value)
+        try:
+            paths = dict(config.items('PATH_SETTINGS'))
+            for key, path in paths.items():
+                if not os.path.isdir(path):
+                    print(f'No such path: {path}')
+                    self.error = True
+                else:
+                    setattr(self, key, path)
+            studio_settings = dict(config.items('STUDIO_SETTINGS'))
+            for key, value in studio_settings.items():
+                setattr(self, key, value)
+        except Exception as e:
+            print(e)
 
     @staticmethod
     def save_settings(**settings: str):

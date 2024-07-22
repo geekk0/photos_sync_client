@@ -12,7 +12,7 @@ class FileTransferService:
         config = configparser.ConfigParser()
         config.read('config.ini')
         self.destination_path = config['PATH_SETTINGS']['DESTINATION_PATH']
-        self.delay_value = int(config['STUDIO_SETTINGS']['delay_value'])
+        self.previous_file = None
         self.logger = None
         self.init_logger()
 
@@ -47,10 +47,6 @@ class FileTransferService:
                 logger.info(f'file {file} moved')
             except Exception as e:
                 logger.error(f'move file error {e}')
-
-    def check_file_name(self, file):
-        if '~' in file:
-            time.sleep(self.delay_value)
 
     def init_logger(self):
         log_file_name = 'sync_client.log'

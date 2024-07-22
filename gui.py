@@ -17,10 +17,11 @@ class MyApp(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        self.sync_manager = None
         self.init_paths()
 
         self.sync_task = None
-        self.sync_manager = None
         self.text_widget = None
 
         self.ui = Ui_MainWindow()
@@ -56,13 +57,13 @@ class MyApp(QMainWindow):
         self.ui.studio_name_input.setFont(font)
         self.ui.studio_name_input.setText(self.sync_manager.studio_name)
 
-        self.ui.delay_value_box.setValue(int(self.sync_manager.delay_value))
-
     def init_paths(self):
         config = configparser.ConfigParser()
         config.read('config.ini')
         self.sync_manager = SyncManager(config)
         self.sync_manager.init_settings()
+
+
 
     def choose_folder_path(self):
         options = QFileDialog.Options()
@@ -85,8 +86,7 @@ class MyApp(QMainWindow):
         try:
             self.sync_manager.save_settings(source_path=self.ui.source_folder_path.text(),
                                             destination_path=self.ui.destination_folder_path.text(),
-                                            studio_name=self.ui.studio_name_input.toPlainText(),
-                                            delay_value=str(self.ui.delay_value_box.value()))
+                                            studio_name=self.ui.studio_name_input.toPlainText())
             self.init_paths()
             self.ui.tabWidget.setCurrentIndex(0)
             self.restart_monitoring()
